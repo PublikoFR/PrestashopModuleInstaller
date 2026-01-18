@@ -5,6 +5,8 @@ A bash script to manage PrestaShop modules and themes in Docker environments.
 ## Features
 
 - Support for both **modules** and **themes**
+- Install / Uninstall / Reinstall modules via PrestaShop CLI
+- Sync (rsync) / Enable / Delete themes
 - Interactive menu with keyboard navigation (vim keys supported)
 - Automatic backup before each operation (keeps last 5)
 - Restore from backup
