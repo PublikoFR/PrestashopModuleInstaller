@@ -1,24 +1,25 @@
-# PrestaShop Module Installer
+# Prestashop Docker Toolbox
 
-A bash script to manage PrestaShop module installation, uninstallation, and deployment in Docker environments.
+A bash script to manage PrestaShop modules and themes in Docker environments.
 
 ## Features
 
-- Interactive menu with keyboard navigation
-- Install/Uninstall/Reinstall modules via PrestaShop CLI
-- Automatic backup before each installation (keeps last 5)
+- Support for both **modules** and **themes**
+- Interactive menu with keyboard navigation (vim keys supported)
+- Automatic backup before each operation (keeps last 5)
 - Restore from backup
 - Clear PrestaShop cache
 - Restart Docker containers
 - Build production-ready ZIP archives
-- Auto-update from remote repository
+- Auto-update from GitHub releases
 - CLI flags for automation/scripting
 
 ## Requirements
 
 - Docker with a running PrestaShop container
 - Bash shell
-- `zip` command (for building archives)
+- `rsync` (for theme sync)
+- `zip` (for building archives)
 
 ## Setup
 
@@ -29,18 +30,20 @@ A bash script to manage PrestaShop module installation, uninstallation, and depl
 
 2. Edit `.env.install` with your settings:
    ```bash
+   TYPE="module"  # or "theme"
    PRESTASHOP_PATH="/path/to/your/prestashop"
    DOCKER_CONTAINER="your_container_name"
-   MODULE_NAME="yourmodulename"
+   NAME="yourmoduleorthemename"
    ```
 
-3. Place your module folder next to `install.sh`:
+3. Place your module/theme folder next to `install.sh`:
    ```
-   Module Installer/
+   project/
    ├── install.sh
    ├── .env.install
    └── yourmodulename/
-       └── yourmodulename.php
+       └── yourmodulename.php   # for modules
+       └── config/theme.yml     # for themes
    ```
 
 4. Make executable:
@@ -58,7 +61,7 @@ A bash script to manage PrestaShop module installation, uninstallation, and depl
 
 Use arrow keys (or `j`/`k`) to navigate, Enter to select, `q` or Esc to quit.
 
-### CLI Mode
+### CLI Mode (Module)
 
 ```bash
 ./install.sh --install      # Install / Reinstall
@@ -66,6 +69,20 @@ Use arrow keys (or `j`/`k`) to navigate, Enter to select, `q` or Esc to quit.
 ./install.sh --reinstall    # Uninstall then Reinstall
 ./install.sh --delete       # Delete files
 ./install.sh --reset        # Delete then Reinstall
+```
+
+### CLI Mode (Theme)
+
+```bash
+./install.sh --sync         # Sync files (rsync)
+./install.sh --install      # Sync + Enable theme
+./install.sh --delete       # Delete theme
+./install.sh --reset        # Delete + Reinstall
+```
+
+### Common Options
+
+```bash
 ./install.sh --restore      # Restore from backup
 ./install.sh --cache        # Clear cache
 ./install.sh --restart      # Restart Docker containers
