@@ -5,10 +5,10 @@ set -e
 # Script info
 # =============================================================================
 SCRIPT_NAME="Publiko Module Installer"
-SCRIPT_VERSION="1.2.1"
+SCRIPT_VERSION="1.2.0"
 
-# Repository URL for auto-update (raw GitHub)
-UPDATE_REPO_URL="https://raw.githubusercontent.com/publiko/PrestashopModuleInstaller/master"
+# GitHub repository for auto-update (owner/repo format)
+GITHUB_REPO="publiko/PrestashopModuleInstaller"
 
 # =============================================================================
 # Configuration - Load from .env.install
@@ -71,26 +71,26 @@ check_prerequisites() {
 # =============================================================================
 # Auto-update
 # =============================================================================
+LATEST_VERSION=""
+
 check_for_update() {
-    local remote_version
     local update_available=false
 
     info_msg "Checking for updates..."
 
-    # Fetch remote version
-    remote_version=$(curl -s --connect-timeout 5 "${UPDATE_REPO_URL}/VERSION" 2>/dev/null || echo "")
+    # Fetch latest tag from GitHub API
+    LATEST_VERSION=$(curl -s --connect-timeout 5 "https://api.github.com/repos/${GITHUB_REPO}/tags" 2>/dev/null \
+        | grep -oP '"name":\s*"\K[0-9]+\.[0-9]+\.[0-9]+' \
+        | head -1 || echo "")
 
-    if [[ -z "$remote_version" ]]; then
-        error_msg "Unable to check for updates (no connection?)"
+    if [[ -z "$LATEST_VERSION" ]]; then
+        error_msg "Unable to check for updates (no connection or no tags?)"
         return 1
     fi
 
-    # Clean version (remove spaces/newlines)
-    remote_version=$(echo "$remote_version" | tr -d '[:space:]')
-
-    if [[ "$remote_version" != "$SCRIPT_VERSION" ]]; then
+    if [[ "$LATEST_VERSION" != "$SCRIPT_VERSION" ]]; then
         # Compare versions (simple semver)
-        if [[ "$(printf '%s\n' "$SCRIPT_VERSION" "$remote_version" | sort -V | tail -n1)" == "$remote_version" ]]; then
+        if [[ "$(printf '%s\n' "$SCRIPT_VERSION" "$LATEST_VERSION" | sort -V | tail -n1)" == "$LATEST_VERSION" ]]; then
             update_available=true
         fi
     fi
@@ -99,7 +99,7 @@ check_for_update() {
         echo ""
         echo -e "${YELLOW}╔══════════════════════════════════════════════╗${NC}"
         echo -e "${YELLOW}║${NC}  ${BOLD}New version available!${NC}"
-        echo -e "${YELLOW}║${NC}  Current: ${RED}${SCRIPT_VERSION}${NC} → New: ${GREEN}${remote_version}${NC}"
+        echo -e "${YELLOW}║${NC}  Current: ${RED}${SCRIPT_VERSION}${NC} → New: ${GREEN}${LATEST_VERSION}${NC}"
         echo -e "${YELLOW}╚══════════════════════════════════════════════╝${NC}"
         echo ""
         echo -e "  Update now? [y/N] "
@@ -118,11 +118,12 @@ check_for_update() {
 
 do_update() {
     local temp_script
+    local download_url="https://raw.githubusercontent.com/${GITHUB_REPO}/${LATEST_VERSION}/install.sh"
     temp_script=$(mktemp)
 
-    info_msg "Downloading new version..."
+    info_msg "Downloading version ${LATEST_VERSION}..."
 
-    if curl -s --connect-timeout 10 "${UPDATE_REPO_URL}/install.sh" -o "$temp_script" 2>/dev/null; then
+    if curl -s --connect-timeout 10 "$download_url" -o "$temp_script" 2>/dev/null; then
         # Verify downloaded file is valid (starts with #!/bin/bash)
         if head -1 "$temp_script" | grep -q "^#!/bin/bash"; then
             # Backup old version
