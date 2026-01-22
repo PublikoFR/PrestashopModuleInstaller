@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.5] - 2026-01-22
+
+### Fixed
+- Auto-update now works on all systems (removed `grep -P` dependency)
+
 ## [1.2.4] - 2026-01-22
 
 ### Added

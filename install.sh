@@ -5,7 +5,7 @@ set -e
 # Script info
 # =============================================================================
 SCRIPT_NAME="Prestashop Docker Toolbox"
-SCRIPT_VERSION="1.2.4"
+SCRIPT_VERSION="1.2.5"
 
 # GitHub repository for auto-update (owner/repo format)
 GITHUB_REPO="PublikoFR/PrestashopDockerToolbox"
@@ -98,10 +98,11 @@ check_for_update() {
 
     info_msg "Checking for updates..."
 
-    # Fetch latest tag from GitHub API
+    # Fetch latest tag from GitHub API (portable grep without -P)
     LATEST_VERSION=$(curl -s --connect-timeout 5 "https://api.github.com/repos/${GITHUB_REPO}/tags" 2>/dev/null \
-        | grep -oP '"name":\s*"\K[0-9]+\.[0-9]+\.[0-9]+' \
-        | head -1 || echo "")
+        | grep -o '"name": *"[0-9.]*"' \
+        | head -1 \
+        | sed 's/[^0-9.]//g' || echo "")
 
     if [[ -z "$LATEST_VERSION" ]]; then
         error_msg "Unable to check for updates (no connection or no tags?)"
